@@ -8,12 +8,12 @@ console = Console()
 @app.callback()
 def callback():
     """
-    FlavorLineTool - A CLI for tracking cookies and interacting with flavortown.
+    FlavorLineTool - A CLI for tracking cookies and interacting with Flavortown.
     """
-
+    
 @app.command()
 def status():
-    console.print("Flavortown CLI is alive", style="bold green")
+    console.print("FlavorLineTool is alive!!!", style="bold green")
 
 def main():
     app()
