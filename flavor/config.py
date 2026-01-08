@@ -20,11 +20,20 @@ def _save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
-def get_cookie_count() -> int:
+def get_api_key() -> str:
     data = _load_data()
-    return data.get("cookies", 0)
+    return data.get("api_key", "")
 
-def set_cookie_count(count: int):
+def set_api_key(key: str):
     data = _load_data()
-    data["cookies"] = count
+    data["api_key"] = key
+    _save_data(data)
+
+def get_slack_id() -> str:
+    data = _load_data()
+    return data.get("slackid", "")
+
+def set_slack_id(key: str):
+    data = _load_data()
+    data["slackid"] = key
     _save_data(data)
