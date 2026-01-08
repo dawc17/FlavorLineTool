@@ -77,6 +77,8 @@ def list_shop():
             console.print("No items found in the shop.", style="yellow")
             return
 
+        items.sort(key=lambda x: x.get("id", 0))
+
         table = Table(title="Flavortown Shop")
         table.add_column("ID", justify="right", style="cyan", no_wrap=True)
         table.add_column("Name", style="magenta")
