@@ -10,3 +10,6 @@ flavor cookies set [number]
 '''
 - interact with the flavortown api (tbd)
 - check total time spent on your projects
+
+## installation
+soon you will be able to install flavorlinetool with pip!
