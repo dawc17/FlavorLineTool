@@ -1,5 +1,6 @@
 # flavor/cli.py
 import typer
+import time
 from rich.console import Console
 from rich.table import Table
 from flavor.config import set_api_key, set_flavor_id, get_flavor_id, set_hackatime_key, set_hackatime_username, get_hackatime_username
@@ -11,11 +12,13 @@ cookies_app = typer.Typer()
 list_app = typer.Typer()
 time_app = typer.Typer()
 login_app = typer.Typer()
+search_app = typer.Typer()
 
 app.add_typer(cookies_app, name="cookies", help="Manage your cookie stash.")
 app.add_typer(list_app, name="list", help="List resources from Flavortown.")
 app.add_typer(time_app, name="time", help="Track your coding time with Hackatime.")
 app.add_typer(login_app, name="login", help="Manage your login credentials.")
+app.add_typer(search_app, name="search", help="Search for resources.")
 
 console = Console()
 
@@ -126,15 +129,11 @@ def list_users(page: int = 1):
             data = get_users(page)
         
         users = data.get("users", [])
-        # Some APIs return pagination metadata in the root response, e.g., "pagination": {...}
-        # Assuming typical response structure or just displaying what we have.
-        # If API doesn't return total counts, we might just show "Page X".
         
         if not users:
             console.print("No users found on this page.", style="yellow")
             return
 
-        # Try to find pagination info if available in response
         pagination = data.get("pagination", {})
         total_users = pagination.get("total_count", "Unknown")
         current_page = pagination.get("current_page", page)
@@ -213,7 +212,6 @@ def list_my_projects():
             p_id = str(project.get("id"))
             title = project.get("title") or "Unknown"
             desc = project.get("description") or "-"
-            # Truncate description if too long
             if len(desc) > 50:
                 desc = desc[:47] + "..."
             repo = project.get("repo_url") or "-"
@@ -305,6 +303,95 @@ def stats():
         console.print(f"Hackatime Error: {e}", style="bold red")
     except ValueError:
         console.print("Stored Flavor ID is not a valid integer.", style="bold red")
+
+@search_app.command("users")
+def search_users(query: str):
+    """
+    Search for users by display name (client-side). WARNING: EXPERIMENTAL FEATURE / PROOF OF CONCEPT due to high API usage.
+    """
+    console.print("[bold red]WARNING: This is an EXPERIMENTAL FEATURE and mostly a PROOF OF CONCEPT.[/bold red]")
+    console.print("[bold red]It performs client-side filtering by iterating through paginated API results.[/bold red]")
+    console.print("[bold red]HIGH RISK of hitting API rate limits. Advised against using for now.[/bold red]", style="bold red")
+    console.print()
+
+    if not typer.confirm("Do you want to proceed despite the risks?"):
+        console.print("Aborted.", style="yellow")
+        raise typer.Exit()
+
+    query_norm = query.lower().strip()
+    console.print(f"Searching for users matching '[bold]{query}[/bold]'...", style="cyan")
+
+    try:
+        with console.status(f"Fetching page 1...", spinner="dots"):
+             data = get_users(page=1)
+             
+        users = data.get("users", [])
+        pagination = data.get("pagination", {})
+        total_pages = pagination.get("total_pages", 1)
+        total_count = pagination.get("total_count", "Unknown")
+        
+        results = []
+        def filter_users(user_list):
+            matches = []
+            for u in user_list:
+                d_name = u.get("display_name") or ""
+                if query_norm in d_name.lower():
+                    matches.append(u)
+            return matches
+
+        results.extend(filter_users(users))
+        
+        console.print(f"Found {len(results)} matches on Page 1.", style="dim")
+        
+        if total_pages > 1:
+            console.print(f"There are {total_pages} pages ({total_count} users) total.", style="yellow")
+            console.print("Warning: API Rate Limit is 5 reqs/min.", style="bold red")
+            
+            if typer.confirm("Do you want to scan ALL pages? (This will take several minutes)"):
+                import time
+                from rich.progress import track
+                
+                pages_to_scan = range(2, total_pages + 1)
+                
+                for page_num in track(pages_to_scan, description="Scanning pages..."):
+                    # Rate limit sleep - 12s per request to be safe (5 reqs/60s)
+                    time.sleep(12.5) 
+                    
+                    try:
+                        p_data = get_users(page=page_num)
+                        page_users = p_data.get("users", [])
+                        matches = filter_users(page_users)
+                        if matches:
+                            results.extend(matches)
+                            console.print(f"Found {len(matches)} matches on Page {page_num}...", style="dim")
+                    except Exception as e:
+                        console.print(f"Failed to fetch page {page_num}: {e}", style="red")
+                        # Don't break, try next?
+                        pass
+
+        # Display results
+        if not results:
+            console.print("No users found.", style="yellow")
+            return
+
+        title = f"Search Results for '{query}'"
+        table = Table(title=title)
+        table.add_column("ID", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Display Name", style="magenta")
+        table.add_column("Slack ID", style="green")
+        table.add_column("Cookies", justify="right", style="yellow")
+
+        for user in results:
+            d_name = user.get("display_name") or "Unknown"
+            s_id = user.get("slack_id") or "N/A"
+            c_count = str(user.get("cookies") if user.get("cookies") is not None else 0)
+            table.add_row(str(user.get("id")), d_name, s_id, c_count)
+
+        console.print(table)
+        console.print(f"Total found: {len(results)}", justify="center", style="bold")
+
+    except APIError as e:
+        console.print(f"Error: {e}", style="bold red")
 
 def main():
     app()
