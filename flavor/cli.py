@@ -2,15 +2,18 @@
 import typer
 from rich.console import Console
 from rich.table import Table
-from flavor.config import set_api_key, set_flavor_id, get_flavor_id
+from flavor.config import set_api_key, set_flavor_id, get_flavor_id, set_hackatime_key, set_hackatime_username, get_hackatime_username
 from flavor.api import get_users, get_user_by_id, APIError, get_shop
+from flavor.hackatime import get_time_today, get_stats, HackatimeAPIError
 
 app = typer.Typer()
 cookies_app = typer.Typer()
 list_app = typer.Typer()
+time_app = typer.Typer()
 
 app.add_typer(cookies_app, name="cookies", help="Manage your cookie stash.")
 app.add_typer(list_app, name="list", help="List resources from Flavortown.")
+app.add_typer(time_app, name="time", help="Track your coding time with Hackatime.")
 
 console = Console()
 
@@ -41,6 +44,17 @@ def loginid(key: str):
     set_flavor_id(key)
     console.print(f"Successfully logged in with the Flavortown User ID!", style="green")
 
+@app.command()
+def loginhackatime(key: str):
+    """Login with your Hackatime API key."""
+    set_hackatime_key(key)
+    console.print(f"Successfully logged in with Hackatime API key!", style="green")
+
+@app.command()
+def loginhackatimeuser(username: str):
+    """Set your Hackatime username."""
+    set_hackatime_username(username)
+    console.print(f"Successfully set Hackatime username to {username}!", style="green")
 
 @cookies_app.command("show")
 def cookies_show():
@@ -104,7 +118,7 @@ def list_shop():
 
 @list_app.command("users")
 def list_users():
-    """List all users."""
+    """List some users."""
     try:
         with console.status("Fetching users...", spinner="dots"):
             data = get_users()
@@ -131,6 +145,85 @@ def list_users():
         console.print(table)
     except APIError as e:
         console.print(f"Error: {e}", style="bold red")
+
+@time_app.command("today")
+def time_today():
+    """Show how much you've coded today."""
+    try:
+        with console.status("Fetching your coding time...", spinner="dots"):
+            data = get_time_today()
+        
+        grand_total = data.get("data", {}).get("grand_total", {})
+        text = grand_total.get("text", "0 secs")
+        
+        console.print(f"You have coded for [bold cyan]{text}[/bold cyan] today!", style="green")
+        
+    except HackatimeAPIError as e:
+        console.print(f"Error: {e}", style="bold red")
+
+@app.command()
+def stats():
+    """Show all your stats (Flavortown + Hackatime)."""
+    flavor_id = get_flavor_id()
+    if not flavor_id:
+        console.print("You are not logged in with your Flavor ID.", style="yellow")
+        flavor_id = typer.prompt("Please enter your Flavortown User ID")
+        set_flavor_id(flavor_id)
+        console.print(f"Flavor ID saved!", style="green")
+
+    try:
+        with console.status("Fetching your stats...", spinner="dots"):
+            ft_data = get_user_by_id(int(flavor_id))
+            
+            # Fetch Hackatime data
+            ht_username = get_hackatime_username()
+            if not ht_username:
+                # Stop spinner to prompt user
+                pass 
+        
+        if not ht_username:
+            console.print("You have not set your Hackatime username.", style="yellow")
+            ht_username = typer.prompt("Please enter your Hackatime username")
+            set_hackatime_username(ht_username)
+            console.print(f"Hackatime username saved!", style="green")
+
+        with console.status("Fetching Hackatime stats...", spinner="dots"):
+           ht_data = get_stats(ht_username)
+
+        display_name = ft_data.get("display_name") or "Unknown"
+        cookies = ft_data.get("cookies")
+        if cookies is None:
+            cookies = 0
+
+        ht_data_content = ht_data.get("data", {})
+        time_str = ht_data_content.get("human_readable_total", "0 secs")
+        
+        languages = ht_data_content.get("languages", [])
+        top_lang = "N/A"
+        top_lang_time = "N/A"
+        
+        if languages:
+            first_lang = languages[0]
+            top_lang = first_lang.get("name", "Unknown")
+            top_lang_time = first_lang.get("text", "0 secs")
+
+        table = Table(title="Your Stats")
+        table.add_column("Display Name", style="magenta")
+        table.add_column("Total Time Coded", style="cyan")
+        table.add_column("Cookies", justify="right", style="yellow")
+        table.add_column("Top Language", style="blue")
+        table.add_column("Time in Top Language", style="green")
+        
+        table.add_row(display_name, time_str, str(cookies), top_lang, top_lang_time)
+        
+        console.print(table)
+
+    except APIError as e:
+        console.print(f"Flavortown Error: {e}", style="bold red")
+    except HackatimeAPIError as e:
+        console.print(f"Hackatime Error: {e}", style="bold red")
+    except ValueError:
+        console.print("Stored Flavor ID is not a valid integer.", style="bold red")
 
 def main():
     app()

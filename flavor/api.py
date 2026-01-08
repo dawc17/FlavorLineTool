@@ -10,10 +10,14 @@ def _get_headers():
     key = get_api_key()
     if not key:
         raise APIError("Not logged in. Please run 'flavor login <api_key>' first.")
-    return {
+    
+    headers = {
         "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Flavortown-Ext-5800": "true"
     }
+
+    return headers
 
 def get_users():
     url = f"{API_BASE_URL}/api/v1/users"

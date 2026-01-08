@@ -37,3 +37,21 @@ def set_flavor_id(key: str):
     data = _load_data()
     data["flavorid"] = key
     _save_data(data)
+
+def get_hackatime_key() -> str:
+    data = _load_data()
+    return data.get("hackatime_key", "")
+
+def set_hackatime_key(key: str):
+    data = _load_data()
+    data["hackatime_key"] = key
+    _save_data(data)
+
+def get_hackatime_username() -> str:
+    data = _load_data()
+    return data.get("hackatime_username", "")
+
+def set_hackatime_username(username: str):
+    data = _load_data()
+    data["hackatime_username"] = username
+    _save_data(data)
