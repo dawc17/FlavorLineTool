@@ -29,11 +29,11 @@ def set_api_key(key: str):
     data["api_key"] = key
     _save_data(data)
 
-def get_slack_id() -> str:
+def get_flavor_id() -> str:
     data = _load_data()
-    return data.get("slackid", "")
+    return data.get("flavorid", "")
 
-def set_slack_id(key: str):
+def set_flavor_id(key: str):
     data = _load_data()
-    data["slackid"] = key
+    data["flavorid"] = key
     _save_data(data)
