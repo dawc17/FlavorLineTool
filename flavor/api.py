@@ -19,9 +19,11 @@ def _get_headers():
 
     return headers
 
-def get_users(page: int = 1):
+def get_users(page: int = 1, query: str = None):
     url = f"{API_BASE_URL}/api/v1/users"
     params = {"page": page}
+    if query:
+        params["query"] = query
     try:
         response = requests.get(url, headers=_get_headers(), params=params)
         response.raise_for_status()
