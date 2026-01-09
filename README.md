@@ -1,18 +1,18 @@
 # FlavorLineTool
 
-FlavorLineTool is a command-line interface application designed for interacting with the Flavortown API and tracking coding statistics via Hackatime. It allows users to manage their cookies, view shop items, check coding time, and search for users.
+FlavorLineTool is a command-line interface application designed for interacting with the Flavortown API and tracking coding statistics via Hackatime. It allows users to manage their cookies, projects, view shop items, check coding time, and search the ecosystem.
 
 ## Features
 
+- **Project Management**: Create and edit projects with a guided interactive TUI form.
+- **Enhanced Search**: Server-side searching for users and projects.
 - **Cookie Management**: View your current cookie balance and stats.
 - **Shop Interaction**: List all available items in the Flavortown shop.
 - **Time Tracking**: Integrate with Hackatime to track daily coding time and project statistics.
-- **User Search**: Search for other users on the platform.
-- **Authentication**: Secure login management for both Flavortown and Hackatime services.
 
 ## Installation
 
-FlavorLineTool can be installed using pip.
+FlavorLineTool can be installed using pip from your local directory or via PyPI.
 
 ```bash
 pip install flavorlinetool
@@ -20,74 +20,72 @@ pip install flavorlinetool
 
 ## Usage
 
-The application provides several command groups for different functionalities.
+FlavorLineTool is built with a nested command structure. Running any command without arguments will show its available sub-commands.
 
 ### Authentication
 
-Before using most features, you must configure your credentials.
+Configure your credentials. If you omit the key/ID, the tool will prompt you interactively.
 
 - **Login to Flavortown API**:
-
   ```bash
-  flavor login api <your_api_key>
+  flavor login api
   ```
-
-  Note: The API key must start with `ft_sk_`.
-
 - **Set Flavortown User ID**:
-
   ```bash
-  flavor login id <your_user_id>
+  flavor login id
   ```
-
 - **Login to Hackatime**:
-
   ```bash
-  flavor login hackatime <your_hackatime_key>
+  flavor login hackatime
   ```
-
 - **Set Hackatime Username**:
   ```bash
-  flavor login hackatimeuser <username>
+  flavor login hackatimeuser
   ```
 
-### Cookies
+### Projects (Interactive TUI)
 
-View your current cookie stash and user statistics.
+Manage your Flavortown projects using a user-friendly interactive form.
 
-```bash
-flavor cookies show
-```
+- **Create a Project**:
+  ```bash
+  flavor projects create
+  ```
+- **Edit a Project**:
+  ```bash
+  flavor projects edit <project_id>
+  ```
+- **View Project Details**:
+  ```bash
+  flavor projects view <project_id>
+  ```
+
+### Search
+
+Search the Flavortown ecosystem using server-side filtering.
+
+- **Search Users**:
+  ```bash
+  flavor search users "query"
+  ```
+- **Search Projects**:
+  ```bash
+  flavor search projects "query"
+  ```
 
 ### Listing Resources
 
-List available resources from Flavortown.
+Explore Flavortown resources.
 
-- **List Shop Items**:
-  ```bash
-  flavor list shop
-  ```
+- **Shop**: ``flavor list shop``
+- **Users**: ``flavor list users --page 1``
+- **My Projects**: ``flavor list my-projects``
 
-### Time Tracking
+### Stats & Time
 
-Access your Hackatime statistics.
-
-```bash
-flavor time
-```
-
-### Other Commands
-
-- **Check Status**: Verify the tool is operational.
-
-  ```bash
-  flavor status
-  ```
-
-- **Search**: Search for specific resources.
-  ```bash
-  flavor search
-  ```
+- **Global Stats**: ``flavor stats`` (Combines Flavortown and Hackatime data)
+- **Today coding time**: ``flavor time today``
+- **Check Status**: ``flavor status``
 
 ## License
 
