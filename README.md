@@ -9,4 +9,4 @@ a cli app for tracking cookies and interacting with flavortown
 - list all shop items and all users
 
 ## installation
-soon you will be able to install flavorlinetool with pip!
+pip install flavorlinetool
