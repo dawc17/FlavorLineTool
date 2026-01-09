@@ -7,6 +7,8 @@ name = "flavorlinetool"
 version = "0.1.0"
 description = "A cli app for tracking cookies and interacting with the Flavortown API"
 readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "daw", email = "dawid.czaplicki2008@gmail.com" }]
 requires-python = ">=3.8"
 dependencies = [
     "typer",
