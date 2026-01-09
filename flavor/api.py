@@ -79,3 +79,60 @@ def get_project(project_id: int):
         if isinstance(e, requests.HTTPError) and e.response.status_code == 404:
              raise APIError(f"Project with ID {project_id} not found.")
         raise APIError(f"Failed to fetch project: {str(e)}")
+
+def create_project(title: str, description: str, repo_url: str = None, demo_url: str = None, readme_url: str = None):
+    url = f"{API_BASE_URL}/api/v1/projects"
+    project_data = {
+        "title": title,
+        "description": description,
+    }
+    if repo_url:
+        project_data["repo_url"] = repo_url
+    if demo_url:
+        project_data["demo_url"] = demo_url
+    if readme_url:
+        project_data["readme_url"] = readme_url
+    
+    body = {"project": project_data}
+    
+    try:
+        response = requests.post(url, headers=_get_headers(), json=body)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        if isinstance(e, requests.HTTPError) and e.response.status_code == 401:
+             raise APIError("Invalid API key or unauthorized access.")
+        if isinstance(e, requests.HTTPError) and e.response.status_code == 422:
+             raise APIError("Invalid project data. Make sure title and description are provided.")
+        if isinstance(e, requests.HTTPError) and e.response.status_code == 500:
+             raise APIError("Server error. The API may be experiencing issues, please try again later.")
+        raise APIError(f"Failed to create project: {str(e)}")
+
+def update_project(project_id: int, title: str = None, description: str = None, repo_url: str = None, demo_url: str = None, readme_url: str = None):
+    url = f"{API_BASE_URL}/api/v1/projects/{project_id}"
+    project_data = {}
+    if title is not None:
+        project_data["title"] = title
+    if description is not None:
+        project_data["description"] = description
+    if repo_url is not None:
+        project_data["repo_url"] = repo_url
+    if demo_url is not None:
+        project_data["demo_url"] = demo_url
+    if readme_url is not None:
+        project_data["readme_url"] = readme_url
+    
+    body = {"project": project_data}
+    
+    try:
+        response = requests.patch(url, headers=_get_headers(), json=body)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        if isinstance(e, requests.HTTPError) and e.response.status_code == 401:
+             raise APIError("Invalid API key or unauthorized access.")
+        if isinstance(e, requests.HTTPError) and e.response.status_code == 404:
+             raise APIError(f"Project with ID {project_id} not found.")
+        if isinstance(e, requests.HTTPError) and e.response.status_code == 500:
+             raise APIError("Server error. The API may be experiencing issues, please try again later.")
+        raise APIError(f"Failed to update project: {str(e)}")

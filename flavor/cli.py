@@ -11,6 +11,7 @@ from flavor.commands.lists import app as list_app
 from flavor.commands.times import app as time_app
 from flavor.commands.login import app as login_app
 from flavor.commands.search import app as search_app
+from flavor.commands.projects import app as projects_app
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -19,6 +20,7 @@ app.add_typer(list_app, name="list", help="List resources from Flavortown.")
 app.add_typer(time_app, name="time", help="Track your coding time with Hackatime.")
 app.add_typer(login_app, name="login", help="Manage your login credentials.")
 app.add_typer(search_app, name="search", help="Search for resources.")
+app.add_typer(projects_app, name="projects", help="Create and manage your projects.")
 
 console = Console()
 
