@@ -254,3 +254,69 @@ def project_edit(project_id: int = typer.Argument(None, help="The ID of the proj
         console.print(f"[bold red]Error: {e}[/bold red]")
         raise typer.Exit(code=1)
 
+@app.command("view")
+def project_view(project_id: int = typer.Argument(None, help="The ID of the project to view")):
+    """
+    View your projects or a specific project.
+    If project_id is provided, view details of that specific project.
+    If no argument is provided, view all your projects in a table.
+    """
+    
+    if project_id:
+        # View specific project
+        try:
+            with console.status("Fetching project...", spinner="dots"):
+                project = get_project(project_id)
+            
+            console.print()
+            _display_project_summary(project, f"Project #{project_id}")
+            
+            # Show devlog IDs if any
+            devlog_ids = project.get("devlog_ids", [])
+            if devlog_ids:
+                console.print(f"\n[cyan]Devlogs:[/cyan] {', '.join(map(str, devlog_ids))}")
+            
+        except APIError as e:
+            console.print(f"[bold red]Error: {e}[/bold red]")
+            raise typer.Exit(code=1)
+    else:
+        # View all projects
+        # Check authentication
+        with console.status("Verifying your identity...", spinner="dots"):
+            user_data = _check_authenticated()
+        
+        display_name = user_data.get("display_name", "Unknown")
+        console.print(f"[green]✓ Authenticated as [bold]{display_name}[/bold][/green]")
+        console.print()
+
+        project_ids = user_data.get("project_ids", [])
+        
+        if not project_ids:
+            console.print("[yellow]You don't have any projects yet.[/yellow]") # Removed create prompt as create command was removed
+            return
+
+        table = Table(title="Your Projects")
+        table.add_column("ID", style="cyan")
+        table.add_column("Title", style="white")
+        table.add_column("Description", style="dim")
+        table.add_column("Repo URL", style="blue")
+
+        with console.status(f"Fetching {len(project_ids)} projects...", spinner="dots"):
+            for pid in project_ids:
+                try:
+                    p = get_project(pid)
+                    desc = p.get("description", "") or "-"
+                    if len(desc) > 50:
+                        desc = desc[:47] + "..."
+                    
+                    table.add_row(
+                        str(p.get("id")),
+                        p.get("title") or "-",
+                        desc,
+                        p.get("repo_url") or "-"
+                    )
+                except APIError:
+                    table.add_row(str(pid), "Error fetching data", "-", "-")
+
+        console.print(table)
+

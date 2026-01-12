@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flavorlinetool"
-version = "0.1.0"
+version = "1.0.1"
 description = "A cli app for tracking cookies and interacting with the Flavortown API"
 readme = "README.md"
 license = { text = "MIT" }

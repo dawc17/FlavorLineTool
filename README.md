@@ -43,18 +43,8 @@ Configure your credentials. If you omit the key/ID, the tool will prompt you int
   flavor login hackatimeuser
   ```
 
-### Projects (Interactive TUI)
+### Projects (view only)
 
-Manage your Flavortown projects using a user-friendly interactive form.
-
-- **Create a Project**:
-  ```bash
-  flavor projects create
-  ```
-- **Edit a Project**:
-  ```bash
-  flavor projects edit <project_id>
-  ```
 - **View Project Details**:
   ```bash
   flavor projects view <project_id>
@@ -77,15 +67,15 @@ Search the Flavortown ecosystem using server-side filtering.
 
 Explore Flavortown resources.
 
-- **Shop**: ``flavor list shop``
-- **Users**: ``flavor list users --page 1``
-- **My Projects**: ``flavor list my-projects``
+- **Shop**: `flavor list shop`
+- **Users**: `flavor list users --page 1`
+- **My Projects**: `flavor list my-projects`
 
 ### Stats & Time
 
-- **Global Stats**: ``flavor stats`` (Combines Flavortown and Hackatime data)
-- **Today coding time**: ``flavor time today``
-- **Check Status**: ``flavor status``
+- **Global Stats**: `flavor stats` (Combines Flavortown and Hackatime data)
+- **Today coding time**: `flavor time today`
+- **Check Status**: `flavor status`
 
 ## License
 
