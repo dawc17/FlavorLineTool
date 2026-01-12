@@ -5,7 +5,7 @@ from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.text import Text
 from rich.align import Align
-from flavor.api import get_project, get_user_by_id, create_project, update_project, APIError
+from flavor.api import get_project, get_user_by_id, update_project, APIError
 from flavor.config import get_flavor_id, get_api_key, set_flavor_id
 
 app = typer.Typer(no_args_is_help=True)
@@ -158,67 +158,6 @@ def _project_form(existing: dict = None) -> dict:
     
     return fields
 
-@app.command("create")
-def project_create():
-    """Create a new project with an interactive form."""
-    console.print()
-    console.print("[bold cyan]🚀 Create New Project[/bold cyan]")
-    console.print("[dim]Fill out the form below to create a new project.[/dim]")
-    console.print()
-    
-    # Check authentication
-    with console.status("Verifying your identity...", spinner="dots"):
-        user_data = _check_authenticated()
-    
-    display_name = user_data.get("display_name", "Unknown")
-    console.print(f"[green]✓ Authenticated as [bold]{display_name}[/bold][/green]")
-    console.print()
-    
-    try:
-        fields = _project_form()
-        
-        # Preview
-        console.print("[bold]Preview[/bold]")
-        table = Table(show_header=False, box=None, padding=(0, 2))
-        table.add_column("Field", style="cyan")
-        table.add_column("Value", style="white")
-        
-        preview_data = {
-            "title": fields["title"],
-            "description": fields["description"],
-            "repo_url": fields["repo_url"] or "-",
-            "demo_url": fields["demo_url"] or "-",
-            "readme_url": fields["readme_url"] or "-",
-        }
-        
-        for key, val in preview_data.items():
-            table.add_row(key.replace("_", " ").title(), str(val))
-        console.print(table)
-        console.print()
-        
-        # Confirm
-        if not Confirm.ask("[yellow]Create this project?[/yellow]", default=True):
-            console.print("[dim]Cancelled.[/dim]")
-            raise typer.Exit()
-        
-        # Submit
-        with console.status("Creating project...", spinner="dots"):
-            result = create_project(
-                title=fields["title"],
-                description=fields["description"],
-                repo_url=fields["repo_url"],
-                demo_url=fields["demo_url"],
-                readme_url=fields["readme_url"],
-            )
-        
-        console.print()
-        console.print("[bold green]✅ Project created successfully![/bold green]")
-        _display_project_summary(result, "Created Project")
-        
-    except APIError as e:
-        console.print(f"[bold red]Error: {e}[/bold red]")
-        raise typer.Exit(code=1)
-
 @app.command("edit")
 def project_edit(project_id: int = typer.Argument(None, help="The ID of the project to edit")):
     """Edit an existing project with an interactive form."""
@@ -315,24 +254,3 @@ def project_edit(project_id: int = typer.Argument(None, help="The ID of the proj
         console.print(f"[bold red]Error: {e}[/bold red]")
         raise typer.Exit(code=1)
 
-@app.command("view")
-def project_view(project_id: int = typer.Argument(None, help="The ID of the project to view")):
-    """View details of a specific project."""
-    if project_id is None:
-        project_id = int(Prompt.ask("Enter the project ID to view"))
-    
-    try:
-        with console.status("Fetching project...", spinner="dots"):
-            project = get_project(project_id)
-        
-        console.print()
-        _display_project_summary(project, f"Project #{project_id}")
-        
-        # Show devlog IDs if any
-        devlog_ids = project.get("devlog_ids", [])
-        if devlog_ids:
-            console.print(f"\n[cyan]Devlogs:[/cyan] {', '.join(map(str, devlog_ids))}")
-        
-    except APIError as e:
-        console.print(f"[bold red]Error: {e}[/bold red]")
-        raise typer.Exit(code=1)
